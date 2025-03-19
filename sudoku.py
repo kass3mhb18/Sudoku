@@ -6,14 +6,16 @@ def limpiar_pantalla():
 
 def imprimir_tablero(tablero):
     print("   1 2 3   4 5 6   7 8 9")
-    print("   ---------------------")
-    for i, fila in enumerate(tablero): 
+    #iteracion en i
+    for i, fila in enumerate(tablero): #1
         if i % 3 == 0 and i != 0:
             print("   ------+-------+------")
         print(f"{i+1}  ", end="")
-        for j, valor in enumerate(fila):
+        #iteracion en j
+        for j, valor in enumerate(fila): #2
             if j % 3 == 0 and j != 0:
                 print("| ", end="")
+
             #el 0 representa los esapacios vacios entonces queremos que se muestre " " un espacio vacio para que sea intuitivo para el usuario
             if valor == 0:
                 cell_str = " "
@@ -25,6 +27,8 @@ def imprimir_tablero(tablero):
             print(cell_str, end=" ")
         print()
 
+
+#despues de tablero_pistas
 def movimiento_valido(tablero, fila_idx, col_idx, numero):
     for c in range(9): #comprueba que en la FILA no este el mismo num
         if tablero[fila_idx][c] == numero:
@@ -37,16 +41,16 @@ def movimiento_valido(tablero, fila_idx, col_idx, numero):
 def verificar_ganador(tablero, solucion):
     return tablero == solucion #retorna true si las filas en tablero y solucion son iguales
 
+
 def tablero_con_pistas(tablero_resuelto, num_pistas=1):
     
     num_pistas = max(1, num_pistas)  #garantiza que las pistas no sean 0 o negativo, por default esta en 1, pero por el parametro esta en 80
 
-    
     tablero_copiado_con_pistas = [fila[:] for fila in tablero_resuelto] #[fila[:] for fila va a copiar cada fila de tablero resuelto y lo hara parte de tablero_copiado_con_pistas
     
     posiciones = [(r, c) for r in range(9) for c in range(9)] #luego le coloca las posiciones (r y c) es como (i y j) osea, (0, 0) (0, 1) (0, 2) etc
     random.shuffle(posiciones) #ya que esten registradas esas pociones, las revuelve
-
+    
     pistas_pos = posiciones[:num_pistas] #si por ejemplo son 2 pistas entonces se queda en  (3,4), (7,1), (1,6), (5,3), (2,8) 
     for r in range(9):
         for c in range(9): #recorre el i j del tablero
@@ -54,23 +58,32 @@ def tablero_con_pistas(tablero_resuelto, num_pistas=1):
                 tablero_copiado_con_pistas[r][c] = 0
     return tablero_copiado_con_pistas
 
-TABLERO_PREDETERMINADO = [       #modo normal
+
+
+TABLERO_PREDETERMINADO = [       
     [9, 7, 6, 8, 2, 3, 4, 1, 5],
     [1, 3, 5, 9, 6, 4, 7, 2, 8],
     [8, 2, 4, 7, 5, 1, 9, 6, 3],
     [6, 9, 3, 5, 1, 7, 8, 4, 2],
     [5, 4, 2, 6, 9, 8, 1, 3, 7],
     [7, 8, 1, 3, 4, 2, 6, 5, 9],
-    [3, 5, 9, 8, 4, 6, 2, 7, 1],
+    [3, 5, 9, 4, 8, 6, 2, 7, 1],
     [4, 1, 8, 2, 7, 5, 3, 9, 6],
     [2, 6, 7, 1, 3, 9, 5, 8, 4]
 ]
 
-def jugar_sudoku(tablero):
+def obtener_nombre():
+    limpiar_pantalla()
+    return input("Ingrese su nombre: ")
+
+
+
+def jugar_sudoku(tablero, nombre):
     while True:
         limpiar_pantalla()
+
         imprimir_tablero(tablero)
-        
+        print(f"Juego de {nombre}")
         print("\nSeleccione una opcion:")
         print("1. Jugar.")
         print("2. Rendirse.")
@@ -120,7 +133,7 @@ def jugar_sudoku(tablero):
                 if verificar_ganador(tablero, TABLERO_PREDETERMINADO):
                     limpiar_pantalla()
                     imprimir_tablero(tablero)
-                    print("\nFelicidades, ganaste!")
+                    print(f"\nFelicidades {nombre}, ganaste")
                     input("\nPresiona Enter para salir...")
                     exit()
                 
@@ -139,7 +152,9 @@ def jugar_sudoku(tablero):
 
 def main():
     while True:
+
         limpiar_pantalla()
+
         print("\nBienvenido a Sudoku")
         print("Presione una opcion para continuar:")
         print("1. Jugar")
@@ -151,8 +166,9 @@ def main():
             case "1":
                 #genera la copia del tablero, pero con pistas
                 #la dificultad es la cantidad de pistas que hay, cambiar el parametro num_pistas
+                nombre = obtener_nombre()
                 tablero_juego = tablero_con_pistas(TABLERO_PREDETERMINADO, num_pistas=80) 
-                jugar_sudoku(tablero_juego)
+                jugar_sudoku(tablero_juego, nombre)
             case "2":
                 print("\nSaliendo del juego...")
                 break

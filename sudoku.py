@@ -1,4 +1,5 @@
 import os
+import random
 
 def limpiar_pantalla():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -6,31 +7,64 @@ def limpiar_pantalla():
 def imprimir_tablero(tablero):
     print("   1 2 3   4 5 6   7 8 9")
     print("   ---------------------")
-    for i, fila in enumerate(tablero):
+    for i, fila in enumerate(tablero): 
         if i % 3 == 0 and i != 0:
             print("   ------+-------+------")
         print(f"{i+1}  ", end="")
         for j, valor in enumerate(fila):
             if j % 3 == 0 and j != 0:
                 print("| ", end="")
-            print(valor if valor != 0 else " ", end=" ")
-        
+            #el 0 representa los esapacios vacios entonces queremos que se muestre " " un espacio vacio para que sea intuitivo para el usuario
+            if valor == 0:
+                cell_str = " "
+            else:
+                if TABLERO_PREDETERMINADO[i][j] != 0:
+                    cell_str = f"\033[34m{valor}\033[0m"  #azul
+                else:
+                    cell_str = f"\033[37m{valor}\033[0m"  #blanco 
+            print(cell_str, end=" ")
         print()
 
+def movimiento_valido(tablero, fila_idx, col_idx, numero):
+    for c in range(9): #comprueba que en la FILA no este el mismo num
+        if tablero[fila_idx][c] == numero:
+            return False
+    for r in range(9): #comprueba que en la COLUMNA no este el mismo num
+        if tablero[r][col_idx] == numero:
+            return False
+    return True 
+
+def verificar_ganador(tablero, solucion):
+    return tablero == solucion #retorna true si las filas en tablero y solucion son iguales
+
+def tablero_con_pistas(tablero_resuelto, num_pistas=1):
+    
+    num_pistas = max(1, num_pistas)  #garantiza que las pistas no sean 0 o negativo, por default esta en 1, pero por el parametro esta en 80
+
+    
+    tablero_copiado_con_pistas = [fila[:] for fila in tablero_resuelto] #[fila[:] for fila va a copiar cada fila de tablero resuelto y lo hara parte de tablero_copiado_con_pistas
+    
+    posiciones = [(r, c) for r in range(9) for c in range(9)] #luego le coloca las posiciones (r y c) es como (i y j) osea, (0, 0) (0, 1) (0, 2) etc
+    random.shuffle(posiciones) #ya que esten registradas esas pociones, las revuelve
+
+    pistas_pos = posiciones[:num_pistas] #si por ejemplo son 2 pistas entonces se queda en  (3,4), (7,1), (1,6), (5,3), (2,8) 
+    for r in range(9):
+        for c in range(9): #recorre el i j del tablero
+            if (r, c) not in pistas_pos: # al recorrer el tablero, todo lo que no sea pistas_pos le pone un 0, haciendolo vacio
+                tablero_copiado_con_pistas[r][c] = 0
+    return tablero_copiado_con_pistas
 
 TABLERO_PREDETERMINADO = [       #modo normal
-    [8, 0, 0, 0, 0, 0, 3, 0, 0],
-    [0, 0, 0, 0, 7, 3, 0, 0, 0],
-    [9, 0, 5, 0, 0, 0, 0, 0, 0],
-    [3, 8, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 6, 0, 0, 0, 0, 2],
-    [0, 0, 0, 0, 0, 0, 0, 6, 0],
-    [2, 0, 9, 0, 8, 0, 0, 7, 0],
-    [0, 9, 0, 8, 0, 0, 6, 0, 2],
-    [7, 0, 5, 0, 0, 0, 0, 0, 0]
+    [9, 7, 6, 8, 2, 3, 4, 1, 5],
+    [1, 3, 5, 9, 6, 4, 7, 2, 8],
+    [8, 2, 4, 7, 5, 1, 9, 6, 3],
+    [6, 9, 3, 5, 1, 7, 8, 4, 2],
+    [5, 4, 2, 6, 9, 8, 1, 3, 7],
+    [7, 8, 1, 3, 4, 2, 6, 5, 9],
+    [3, 5, 9, 8, 4, 6, 2, 7, 1],
+    [4, 1, 8, 2, 7, 5, 3, 9, 6],
+    [2, 6, 7, 1, 3, 9, 5, 8, 4]
 ]
-
-#se usara un tablero fijo y la dificultad estara en su numero de incognitas. Mientras tanto este sera el de modo normal
 
 def jugar_sudoku(tablero):
     while True:
@@ -72,13 +106,28 @@ def jugar_sudoku(tablero):
                 if tablero[fila_idx][col_idx] != 0:
                     input("\nLa casilla ya contiene un numero. Presiona Enter para continuar...")
                     continue        
+
+                #AÑADIDO el validador de movimientos validos (verifica si el num ingresado en fila y columna)
+                if not movimiento_valido(tablero, fila_idx, col_idx, numero):
+                    input("\nMovimiento invalido: El numero ya existe en la fila o columna. Presiona Enter para continuar...")
+                    continue
+
                 #y lo coloca
                 tablero[fila_idx][col_idx] = numero
                 input("\nNumero colocado. Presiona Enter para continuar...")
                 
-            case "2": #aqui deberia mostrar el juego resuelto
-                print("\nTe has rendido. Volviendo al menu principal...")
-                input("Presiona Enter para continuar...")
+                #POR ULTIMO, cada que se añade un numero se llama esta funcion, para ver si el juego esta completado si verificas_ganador devuelva true
+                if verificar_ganador(tablero, TABLERO_PREDETERMINADO):
+                    limpiar_pantalla()
+                    imprimir_tablero(tablero)
+                    print("\nFelicidades, ganaste!")
+                    input("\nPresiona Enter para salir...")
+                    exit()
+                
+            case "2":
+                print("\nTe has rendido. El sudoku resuelto es:")
+                imprimir_tablero(TABLERO_PREDETERMINADO)
+                input("\nPresiona Enter para continuar...")
                 break
             
             case "3":
@@ -98,23 +147,21 @@ def main():
         
         opcion = input("Ingrese su opcion (1 o 2): ")
         
-        #pasar esto a case 
-        if opcion == "1": 
-            tablero_juego = [fila[:] for fila in TABLERO_PREDETERMINADO]
-            jugar_sudoku(tablero_juego)
-            
-        elif opcion == "2":
-            print("\nSaliendo del juego...")
-            break
-        else:
-            print("\nOpcion invalida. Por favor, intente nuevamente.")
-            input("Presiona Enter para continuar...")
+        match opcion:
+            case "1":
+                #genera la copia del tablero, pero con pistas
+                #la dificultad es la cantidad de pistas que hay, cambiar el parametro num_pistas
+                tablero_juego = tablero_con_pistas(TABLERO_PREDETERMINADO, num_pistas=80) 
+                jugar_sudoku(tablero_juego)
+            case "2":
+                print("\nSaliendo del juego...")
+                break
+            case _:
+                print("\nOpcion invalida. Por favor, intente nuevamente.")
+                input("Presiona Enter para continuar...")
 
 if __name__ == "__main__":
     main()
 
 #por hacer:
-#ponerle color a los num que no son pistas y a los ingresados por el usuario
-#que detecte que los numeros ingresados no se repitan en la columna ni en la fila
-#que registre al usuario que este jugando
-#mostrar el sudoku resuelto cuando se rinda
+#que registre el nombre del usuario y lo muestre en el tablero de juego y al ganar
